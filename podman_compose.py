@@ -1294,20 +1294,22 @@ async def container_to_args(
         elif is_list(healthcheck_test):
             healthcheck_test = healthcheck_test.copy()
             # If it's a list, first item is either NONE, CMD or CMD-SHELL.
-            healthcheck_type = healthcheck_test.pop(0)
-            if healthcheck_type == "NONE":
+            # If it's not one of those, treat it as exec-form CMD
+            first_item = healthcheck_test[0] if healthcheck_test else ""
+            if first_item == "NONE":
+                healthcheck_test.pop(0)
                 podman_args.append("--no-healthcheck")
-            elif healthcheck_type == "CMD":
+            elif first_item == "CMD":
+                healthcheck_test.pop(0)
                 podman_args.extend(["--healthcheck-command", json.dumps(healthcheck_test)])
-            elif healthcheck_type == "CMD-SHELL":
+            elif first_item == "CMD-SHELL":
+                healthcheck_test.pop(0)
                 if len(healthcheck_test) != 1:
                     raise ValueError("'CMD_SHELL' takes a single string after it")
                 podman_args.extend(["--healthcheck-command", json.dumps(healthcheck_test)])
             else:
-                raise ValueError(
-                    f"unknown healthcheck test type [{healthcheck_type}],\
-                     expecting NONE, CMD or CMD-SHELL."
-                )
+                # Exec-form without explicit CMD prefix
+                podman_args.extend(["--healthcheck-command", json.dumps(healthcheck_test)])
         else:
             raise ValueError("'healthcheck.test' either a string or a list")
 
