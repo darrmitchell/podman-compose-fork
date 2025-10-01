@@ -1305,8 +1305,11 @@ async def container_to_args(
             elif first_item == "CMD-SHELL":
                 healthcheck_test.pop(0)
                 if len(healthcheck_test) != 1:
-                    raise ValueError("'CMD_SHELL' takes a single string after it")
-                podman_args.extend(["--healthcheck-command", json.dumps(healthcheck_test)])
+                    # If CMD-SHELL has multiple arguments, treat it as exec-form CMD instead
+                    # This handles cases where images have incorrectly formatted healthchecks
+                    podman_args.extend(["--healthcheck-command", json.dumps(healthcheck_test)])
+                else:
+                    podman_args.extend(["--healthcheck-command", json.dumps(healthcheck_test)])
             else:
                 # Exec-form without explicit CMD prefix
                 podman_args.extend(["--healthcheck-command", json.dumps(healthcheck_test)])

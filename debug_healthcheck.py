@@ -33,8 +33,7 @@ def debug_healthcheck_format(healthcheck_test):
             print(f"Remaining items: {healthcheck_test}")
             print(f"Length: {len(healthcheck_test)}")
             if len(healthcheck_test) != 1:
-                print("ERROR: CMD_SHELL takes a single string after it")
-                return
+                print("CMD-SHELL has multiple args, treating as exec-form CMD instead")
             result = json.dumps(healthcheck_test)
             print(f"Result: {result}")
         else:
